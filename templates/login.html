@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SnakeGuard | Login</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+
+    <header>
+        <div class="logo">🐍 SNAKEGUARD</div>
+        <nav>
+            <a href="#">About</a>
+            <a href="#">Contact</a>
+        </nav>
+    </header>
+
+    <main>
+        <section class="intro">
+            <p class="tagline">YOUR SAFETY, OUR PRIORITY</p>
+
+            <h1>AI Snakebite Risk<br>Mapping System</h1>
+
+            <p>
+                Environmental insights. Nearby hospitals.
+                Smarter emergency awareness.
+            </p>
+        </section>
+
+        <section class="login-card">
+            <h2>Welcome Back</h2>
+            <p class="subtitle">Sign in to explore the safety dashboard.</p>
+
+            <form action="/" method="POST">
+
+                <label for="email">Email Address</label>
+                <input
+                    type="email"
+                    id="email"
+                    name="email"
+                    placeholder="Enter your email"
+                    required
+                >
+
+                <label for="password">Password</label>
+                <input
+                    type="password"
+                    id="password"
+                    name="password"
+                    placeholder="Enter your password"
+                    required
+                >
+
+                <button type="submit">Log In</button>
+
+            </form>
+
+            <p class="signup-text">
+                Don't have an account?
+                <a href="/signup">Sign Up</a>
+            </p>
+        </section>
+    </main>
+
+    <footer>
+        KNOW THE RISK. FIND HELP. ACT QUICKLY.
+    </footer>
+
+</body>
+</html>

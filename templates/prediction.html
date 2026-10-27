@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Snakebite Risk Assessment | SnakeGuard AI</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #F3EEDC;
+            color: #26352A;
+        }
+
+        header {
+            background: #102318;
+            color: #E9E2C8;
+            padding: 22px 8%;
+        }
+
+        header h1 {
+            margin: 0;
+            font-size: 25px;
+        }
+
+        header p {
+            margin-bottom: 0;
+            color: #D2D9CE;
+        }
+
+        .container {
+            width: 90%;
+            max-width: 850px;
+            margin: 35px auto;
+        }
+
+        .card {
+            background: #FFFFFF;
+            padding: 28px;
+            border-radius: 14px;
+            border: 1px solid #C9BE9B;
+            box-shadow: 0 5px 18px rgba(16, 35, 24, 0.08);
+            margin-bottom: 25px;
+        }
+
+        h2 {
+            margin-top: 0;
+            color: #102318;
+        }
+
+        label {
+            display: block;
+            font-weight: bold;
+            margin: 18px 0 8px;
+        }
+
+        select,
+        input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #C9BE9B;
+            border-radius: 7px;
+            background: #FFFDF7;
+            font-size: 15px;
+        }
+
+        button {
+            margin-top: 25px;
+            width: 100%;
+            padding: 14px;
+            background: #102318;
+            color: white;
+            border: none;
+            border-radius: 7px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #263F30;
+        }
+
+        .result {
+            padding: 22px;
+            border-radius: 10px;
+            margin-top: 15px;
+        }
+
+        .low {
+            background: #E1F2E4;
+            border-left: 6px solid #31834B;
+        }
+
+        .moderate {
+            background: #FFF0C7;
+            border-left: 6px solid #D49A18;
+        }
+
+        .high {
+            background: #FBE2DC;
+            border-left: 6px solid #A43D32;
+        }
+
+        .risk-label {
+            font-size: 27px;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+
+        .notice {
+            background: #FFF5DF;
+            border: 1px solid #E4C98C;
+            border-radius: 8px;
+            padding: 15px;
+            line-height: 1.6;
+            font-size: 14px;
+        }
+
+        .flash {
+            padding: 12px;
+            border-radius: 7px;
+            background: #FBE2DC;
+            margin-bottom: 15px;
+        }
+
+        ul {
+            line-height: 1.8;
+            padding-left: 22px;
+        }
+
+        .back {
+            display: inline-block;
+            margin-bottom: 18px;
+            color: #102318;
+            font-weight: bold;
+            text-decoration: none;
+        }
+
+        footer {
+            text-align: center;
+            padding: 25px;
+            font-size: 13px;
+            color: #526052;
+        }
+    </style>
+</head>
+
+<body>
+
+<header>
+    <h1>SnakeGuard AI</h1>
+    <p>District-wise Snakebite Risk Assessment — Tamil Nadu</p>
+</header>
+
+<div class="container">
+
+    <a class="back" href="{{ url_for('dashboard') }}">
+        &larr; Back to Dashboard
+    </a>
+
+    <div class="card">
+        <h2>Assess Local Risk</h2>
+
+        <p>
+            Select a district and provide the recent environmental
+            conditions to receive a preliminary risk assessment.
+        </p>
+
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="flash">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <form method="POST">
+
+            <label for="district">District</label>
+            <select id="district" name="district" required>
+                <option value="">Select a district</option>
+
+                {% for district in districts %}
+                    <option value="{{ district }}"
+                        {% if result and result.district == district %}
+                            selected
+                        {% endif %}>
+                        {{ district }}
+                    </option>
+                {% endfor %}
+            </select>
+
+            <label for="month">Month</label>
+            <select id="month" name="month" required>
+                <option value="">Select month</option>
+
+                {% for month in [
+                    "January", "February", "March", "April",
+                    "May", "June", "July", "August",
+                    "September", "October", "November", "December"
+                ] %}
+                    <option value="{{ month }}"
+                        {% if result and result.month == month %}
+                            selected
+                        {% endif %}>
+                        {{ month }}
+                    </option>
+                {% endfor %}
+            </select>
+
+            <label for="rainfall">
+                Recent Rainfall (in millimetres)
+            </label>
+
+            <input
+                type="number"
+                id="rainfall"
+                name="rainfall"
+                min="0"
+                max="2000"
+                step="0.1"
+                placeholder="Enter measured rainfall"
+                value="{{ result.rainfall if result else '' }}"
+                required
+            >
+
+            <label for="environment">Surrounding Environment</label>
+
+            <select id="environment" name="environment" required>
+                <option value="">Select environment</option>
+
+                <option value="Agricultural"
+                    {% if result and result.environment == "Agricultural" %}
+                        selected
+                    {% endif %}>
+                    Agricultural / Farmland
+                </option>
+
+                <option value="Forest"
+                    {% if result and result.environment == "Forest" %}
+                        selected
+                    {% endif %}>
+                    Forest / Vegetated Area
+                </option>
+
+                <option value="Wetland"
+                    {% if result and result.environment == "Wetland" %}
+                        selected
+                    {% endif %}>
+                    Wetland / Waterbody Surroundings
+                </option>
+
+                <option value="Residential"
+                    {% if result and result.environment == "Residential" %}
+                        selected
+                    {% endif %}>
+                    Residential Area
+                </option>
+            </select>
+
+            <button type="submit">Assess Snakebite Risk</button>
+
+        </form>
+    </div>
+
+    {% if result %}
+    <div class="card">
+        <h2>Assessment Result</h2>
+
+        <p>
+            <strong>District:</strong> {{ result.district }}<br>
+            <strong>Month:</strong> {{ result.month }}<br>
+            <strong>Rainfall entered:</strong> {{ result.rainfall }} mm<br>
+            <strong>Environment:</strong> {{ result.environment }}
+        </p>
+
+        <div class="result {{ result.risk_class }}">
+            <div>Estimated Risk Category</div>
+
+            <div class="risk-label">
+                {{ result.risk_level }}
+            </div>
+
+            <p>
+                This category is based on a simple environmental
+                scoring rule. It is not a measured probability.
+            </p>
+        </div>
+
+        <h3>Factors Considered</h3>
+
+        <ul>
+            {% for reason in result.reasons %}
+                <li>{{ reason }}</li>
+            {% endfor %}
+        </ul>
+
+        <h3>Recommended Precautions</h3>
+
+        <p>{{ result.recommendation }}</p>
+
+        <div class="notice">
+            <strong>Important limitation:</strong>
+            This is a preliminary, rule-based assessment—not a trained
+            machine-learning prediction. It does not use verified,
+            district-specific historical case counts or live weather data.
+            It must not be used to make medical or emergency decisions.
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="notice">
+        <strong>Snakebite emergency:</strong>
+        If someone is bitten, seek emergency medical care immediately.
+        Keep the person as still as possible and avoid cutting the wound,
+        sucking out venom, or applying a tourniquet. Do not wait for a
+        website assessment.
+    </div>
+
+</div>
+
+<footer>
+    SnakeGuard AI | Academic Project | Tamil Nadu
+</footer>
+
+</body>
+</html>

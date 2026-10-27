@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>SnakeGuard AI | Nearby Hospitals</title>
+
+    <!-- Leaflet map -->
+    <link
+        rel="stylesheet"
+        href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    >
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: #F3EEDC;
+            color: #26352A;
+        }
+
+        header {
+            background: #102318;
+            color: #E9E2C8;
+            padding: 20px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        header h1 {
+            font-size: 25px;
+        }
+
+        header a {
+            color: #E9E2C8;
+            text-decoration: none;
+            border: 1px solid #E9E2C8;
+            padding: 10px 15px;
+            border-radius: 6px;
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: auto;
+            padding: 30px 20px;
+        }
+
+        .intro {
+            margin-bottom: 22px;
+        }
+
+        .intro h2 {
+            font-size: 28px;
+            margin-bottom: 12px;
+            color: #102318;
+        }
+
+        .intro p {
+            line-height: 1.7;
+        }
+
+        .search-box {
+            background: white;
+            border: 1px solid #C9BE9B;
+            border-radius: 12px;
+            padding: 22px;
+            margin-bottom: 22px;
+        }
+
+        .search-box label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .search-row {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        input {
+            flex: 1;
+            min-width: 200px;
+            padding: 13px;
+            border: 1px solid #C9BE9B;
+            border-radius: 6px;
+            font-size: 15px;
+        }
+
+        button,
+        .action-button {
+            display: inline-block;
+            padding: 13px 17px;
+            background: #102318;
+            color: #F3EEDC;
+            border: none;
+            border-radius: 6px;
+            text-decoration: none;
+            cursor: pointer;
+            font-size: 14px;
+            text-align: center;
+        }
+
+        button:hover,
+        .action-button:hover {
+            background: #26352A;
+        }
+
+        .secondary {
+            background: #A43D32;
+        }
+
+        .secondary:hover {
+            background: #812D25;
+        }
+
+        .actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 14px;
+        }
+
+        #map {
+            height: 380px;
+            width: 100%;
+            border-radius: 12px;
+            border: 1px solid #C9BE9B;
+            margin-bottom: 22px;
+            z-index: 1;
+        }
+
+        .info-card {
+            background: #E9E2C8;
+            border-left: 4px solid #A43D32;
+            padding: 17px;
+            border-radius: 6px;
+            line-height: 1.7;
+            margin-bottom: 20px;
+        }
+
+        .section-heading {
+            font-size: 22px;
+            margin-bottom: 15px;
+            color: #102318;
+        }
+
+        .hospital-card {
+            background: white;
+            border: 1px solid #C9BE9B;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 15px;
+        }
+
+        .hospital-card h3 {
+            margin-bottom: 10px;
+            color: #102318;
+        }
+
+        .hospital-card p {
+            line-height: 1.7;
+            margin-bottom: 14px;
+        }
+
+        .status {
+            margin-top: 14px;
+            line-height: 1.6;
+            overflow-wrap: anywhere;
+        }
+
+        footer {
+            text-align: center;
+            background: #102318;
+            color: #E9E2C8;
+            padding: 20px;
+            margin-top: 20px;
+        }
+
+        @media (max-width: 600px) {
+            header {
+                padding: 18px;
+            }
+
+            .intro h2 {
+                font-size: 24px;
+            }
+
+            .search-row {
+                flex-direction: column;
+            }
+
+            input,
+            button,
+            .action-button {
+                width: 100%;
+            }
+
+            #map {
+                height: 320px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<header>
+    <h1>🐍 SnakeGuard AI</h1>
+
+    <a href="{{ url_for('dashboard') }}">
+        ← Dashboard
+    </a>
+</header>
+
+<main class="container">
+
+    <section class="intro">
+        <h2>🏥 Nearby Hospitals</h2>
+
+        <p>
+            Find hospitals near your location using Google Maps.
+            You can also select a location on the map and open
+            directions to nearby medical facilities.
+        </p>
+    </section>
+
+    <section class="search-box">
+
+        <label for="locationInput">
+            Enter your location
+        </label>
+
+        <div class="search-row">
+
+            <input
+                type="text"
+                id="locationInput"
+                placeholder="Example: Thoothukudi, Tamil Nadu"
+                value="Thoothukudi, Tamil Nadu"
+            >
+
+            <button type="button" onclick="searchLocation()">
+                Show on Map
+            </button>
+
+        </div>
+
+        <div class="actions">
+
+            <button
+                type="button"
+                onclick="useCurrentLocation()">
+                📍 Use My Location
+            </button>
+
+            <button
+                type="button"
+                class="secondary"
+                onclick="findHospitals()">
+                🏥 Find Nearby Hospitals
+            </button>
+
+        </div>
+
+        <p id="status" class="status" aria-live="polite">
+            Enter a location or use your current location to begin.
+        </p>
+
+    </section>
+
+    <!-- Interactive map -->
+    <div id="map"></div>
+
+    <section class="info-card">
+        <strong>Emergency safety:</strong>
+
+        If a snakebite occurs, seek emergency medical care immediately.
+        Do not wait for this website to load or rely on map listings
+        to confirm that a facility can treat snakebite.
+        Call your local emergency service if urgent assistance is needed.
+    </section>
+
+    <section>
+        <h2 class="section-heading">
+            Hospital Search
+        </h2>
+
+        <div class="hospital-card">
+
+            <h3>Search hospitals near your location</h3>
+
+            <p>
+                This version opens a Google Maps search for hospitals
+                around your chosen location. Google Maps supplies the
+                search results, so SnakeGuard does not claim to have
+                independently verified hospital availability.
+            </p>
+
+            <a
+                id="googleMapsLink"
+                class="action-button"
+                href="https://www.google.com/maps/search/hospitals+near+Thoothukudi+Tamil+Nadu"
+                target="_blank"
+                rel="noopener noreferrer">
+                Open Hospital Results
+            </a>
+
+        </div>
+    </section>
+
+</main>
+
+<footer>
+    SnakeGuard AI | Snakebite Risk Awareness &amp; Safety
+</footer>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<script>
+    // Create the interactive map.
+    const map = L.map("map").setView([8.7642, 78.1348], 12);
+
+    // Display OpenStreetMap map tiles.
+    L.tileLayer(
+        "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+        {
+            maxZoom: 19,
+            attribution: "&copy; OpenStreetMap contributors"
+        }
+    ).addTo(map);
+
+    let locationMarker = null;
+
+    function setLocation(latitude, longitude, label) {
+
+        map.setView([latitude, longitude], 14);
+
+        if (locationMarker) {
+            map.removeLayer(locationMarker);
+        }
+
+        locationMarker = L.marker([latitude, longitude])
+            .addTo(map)
+            .bindPopup(label)
+            .openPopup();
+
+        updateGoogleMapsLink(label, latitude, longitude);
+    }
+
+    function updateGoogleMapsLink(label, latitude, longitude) {
+
+        const link = document.getElementById("googleMapsLink");
+
+        link.href =
+            "https://www.google.com/maps/search/hospitals/@" +
+            latitude + "," + longitude + ",14z";
+
+        link.textContent = "Open Hospitals Near This Location";
+    }
+
+    async function searchLocation() {
+
+        const input = document
+            .getElementById("locationInput")
+            .value
+            .trim();
+
+        const status = document.getElementById("status");
+
+        if (!input) {
+            status.textContent = "Please enter a location.";
+            return;
+        }
+
+        status.textContent = "Searching for the location...";
+
+        try {
+
+            const url =
+                "https://nominatim.openstreetmap.org/search?format=json&limit=1&q=" +
+                encodeURIComponent(input);
+
+            const response = await fetch(url);
+
+            if (!response.ok) {
+                throw new Error("Location search is unavailable.");
+            }
+
+            const results = await response.json();
+
+            if (!results.length) {
+                status.textContent =
+                    "Location not found. Try entering a town or city name.";
+                return;
+            }
+
+            const latitude = Number(results[0].lat);
+            const longitude = Number(results[0].lon);
+
+            setLocation(latitude, longitude, results[0].display_name);
+
+            status.textContent =
+                "Location found. Click 'Find Nearby Hospitals' to search Google Maps.";
+
+        } catch (error) {
+
+            status.textContent =
+                "Unable to find that location right now. You can still open Google Maps and search for hospitals manually.";
+
+        }
+    }
+
+    function useCurrentLocation() {
+
+        const status = document.getElementById("status");
+
+        if (!navigator.geolocation) {
+
+            status.textContent =
+                "Your browser does not support location access.";
+
+            return;
+        }
+
+        status.textContent =
+            "Requesting your current location...";
+
+        navigator.geolocation.getCurrentPosition(
+
+            function(position) {
+
+                const latitude = position.coords.latitude;
+                const longitude = position.coords.longitude;
+
+                setLocation(
+                    latitude,
+                    longitude,
+                    "Your selected location"
+                );
+
+                status.textContent =
+                    "Location found. You can now search for nearby hospitals.";
+
+            },
+
+            function() {
+
+                status.textContent =
+                    "Location permission was unavailable. Enter your town or city instead.";
+
+            },
+
+            {
+                enableHighAccuracy: false,
+                timeout: 10000,
+                maximumAge: 60000
+            }
+        );
+    }
+
+    function findHospitals() {
+
+        const status = document.getElementById("status");
+
+        const link = document.getElementById("googleMapsLink");
+
+        const destination = new URL(link.href);
+
+        if (
+            destination.hostname !== "www.google.com" ||
+            !destination.pathname.startsWith("/maps/search/")
+        ) {
+            status.textContent =
+                "Please select a location before searching for hospitals.";
+            return;
+        }
+
+        window.open(
+            link.href,
+            "_blank",
+            "noopener,noreferrer"
+        );
+
+        status.textContent =
+            "Hospital search opened in Google Maps. Check the results and contact the facility to confirm emergency services.";
+    }
+
+    // Allow pressing Enter to search for a location.
+    document
+        .getElementById("locationInput")
+        .addEventListener("keydown", function(event) {
+
+            if (event.key === "Enter") {
+                searchLocation();
+            }
+        });
+
+    // Initialize the map with the default location.
+    setLocation(
+        8.7642,
+        78.1348,
+        "Thoothukudi, Tamil Nadu"
+    );
+</script>
+
+</body>
+</html>

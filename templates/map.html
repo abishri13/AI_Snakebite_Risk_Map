@@ -1,0 +1,823 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SnakeGuard AI - Risk Map</title>
+
+    <link rel="stylesheet"
+          href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #E9E2C8;
+            color: #26352A;
+        }
+
+        header {
+            background: #102318;
+            color: #E9E2C8;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .container {
+            padding: 20px;
+        }
+
+        .info,
+        .state-data-section,
+        .selected-state {
+            background: #F3EEDC;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 10px;
+        }
+
+        #map {
+            height: 500px;
+            width: 100%;
+            border-radius: 12px;
+            border: 2px solid #26352A;
+            margin-bottom: 25px;
+            background: #e5e8df;
+        }
+
+        a {
+            color: #A43D32;
+        }
+
+        #stateSearch {
+            width: 100%;
+            max-width: 420px;
+            padding: 12px;
+            margin: 10px 0 18px;
+            border: 1px solid #C9BE9B;
+            border-radius: 8px;
+            font-size: 16px;
+            box-sizing: border-box;
+        }
+
+        .table-container {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: #FFFFFF;
+        }
+
+        th,
+        td {
+            padding: 12px;
+            border: 1px solid #DDD6BF;
+            text-align: left;
+            white-space: nowrap;
+        }
+
+        th {
+            background: #102318;
+            color: #F3EEDC;
+        }
+
+        tbody tr:nth-child(even) {
+            background: #F7F4E9;
+        }
+
+        tbody tr:hover {
+            background: #E9E2C8;
+        }
+
+        tbody tr.selected-row {
+            background: #D5E1CE;
+            font-weight: bold;
+        }
+
+        .statistics {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 12px;
+            margin-top: 18px;
+        }
+
+        .stat-card {
+            background: #E9E2C8;
+            border-left: 4px solid #A43D32;
+            padding: 15px;
+            border-radius: 8px;
+            min-width: 0;
+        }
+
+        .stat-card h3 {
+            font-size: 14px;
+            margin: 0 0 10px;
+        }
+
+        .stat-card p {
+            font-size: 22px;
+            font-weight: bold;
+            margin: 0;
+            overflow-wrap: anywhere;
+        }
+
+        .legend {
+            background: #F3EEDC;
+            padding: 14px;
+            border-radius: 8px;
+            margin-bottom: 18px;
+        }
+
+        .legend-title {
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .legend-items {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px 18px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            font-size: 13px;
+        }
+
+        .legend-swatch {
+            width: 18px;
+            height: 18px;
+            border: 1px solid #526052;
+            border-radius: 3px;
+            flex-shrink: 0;
+        }
+
+        .data-note {
+            font-size: 13px;
+            line-height: 1.6;
+            margin-top: 16px;
+        }
+
+        .map-message {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 6px;
+            background: #E9E2C8;
+            line-height: 1.5;
+        }
+
+        @media (max-width: 700px) {
+            .container {
+                padding: 12px;
+            }
+
+            #map {
+                height: 400px;
+            }
+
+            header h1 {
+                font-size: 24px;
+            }
+
+            .statistics {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+
+            .info,
+            .state-data-section,
+            .selected-state {
+                padding: 14px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<header>
+    <h1>🐍 SnakeGuard AI</h1>
+    <p>India State-wise Snakebite Risk Map</p>
+</header>
+
+<div class="container">
+
+    <section class="info">
+        <h2>Explore Snakebite Statistics</h2>
+
+        <p>
+            Each coloured region represents a state or Union Territory.
+            Colours indicate its reported snakebite cases in 2024.
+        </p>
+
+        <p>
+            <strong>How to use:</strong>
+            Click a coloured region to view its statistics.
+            You can also drag the marker to explore the nearest state centre.
+        </p>
+
+        <a href="/dashboard">← Back to Dashboard</a>
+    </section>
+
+    <div id="map" aria-label="Interactive snakebite statistics map of India"></div>
+
+    <div class="legend">
+        <div class="legend-title">
+            Reported Snakebite Cases — 2024
+        </div>
+
+        <div class="legend-items">
+            <div class="legend-item">
+                <span class="legend-swatch" style="background:#D9E8C5"></span>
+                Lower: 0–999
+            </div>
+
+            <div class="legend-item">
+                <span class="legend-swatch" style="background:#A8C98A"></span>
+                1,000–2,999
+            </div>
+
+            <div class="legend-item">
+                <span class="legend-swatch" style="background:#F0D77A"></span>
+                3,000–5,999
+            </div>
+
+            <div class="legend-item">
+                <span class="legend-swatch" style="background:#E9A15B"></span>
+                6,000–9,999
+            </div>
+
+            <div class="legend-item">
+                <span class="legend-swatch" style="background:#C95C4B"></span>
+                10,000+
+            </div>
+
+            <div class="legend-item">
+                <span class="legend-swatch" style="background:#B8B8B0"></span>
+                Data unavailable
+            </div>
+        </div>
+
+        <p class="data-note">
+            These are illustrative count categories, not medically validated
+            risk levels. A higher reported count does not necessarily mean
+            a higher individual risk.
+        </p>
+    </div>
+
+    <p id="mapStatus" class="map-message" aria-live="polite">
+        Loading state boundaries...
+    </p>
+
+    <section class="selected-state">
+
+        <h2 id="selectedStateName">Selected State: Tamil Nadu</h2>
+
+        <p id="selectionMessage" aria-live="polite">
+            Select a coloured state to view its statistics.
+        </p>
+
+        <div class="statistics">
+            <div class="stat-card">
+                <h3>Cases (2023)</h3>
+                <p id="cases2023">--</p>
+            </div>
+
+            <div class="stat-card">
+                <h3>Cases (2024)</h3>
+                <p id="cases2024">--</p>
+            </div>
+
+            <div class="stat-card">
+                <h3>Deaths (2023)</h3>
+                <p id="deaths2023">--</p>
+            </div>
+
+            <div class="stat-card">
+                <h3>Deaths (2024)</h3>
+                <p id="deaths2024">--</p>
+            </div>
+        </div>
+    </section>
+
+    <section class="state-data-section">
+
+        <h2>🇮🇳 State-wise Snakebite Statistics</h2>
+
+        <p>
+            Historical reported cases and deaths for the available
+            states and Union Territories.
+        </p>
+
+        <p>
+            <strong>Regions in dataset:</strong>
+            {{ snakebite_data|length }}
+        </p>
+
+        <input
+            type="text"
+            id="stateSearch"
+            placeholder="Search state or Union Territory..."
+            aria-label="Search state or Union Territory"
+        >
+
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>State / Union Territory</th>
+                        <th>Cases (2023)</th>
+                        <th>Cases (2024)</th>
+                        <th>Deaths (2023)</th>
+                        <th>Deaths (2024)</th>
+                    </tr>
+                </thead>
+
+                <tbody id="stateTableBody">
+                    {% for row in snakebite_data %}
+                    <tr data-state="{{ row['state_or_union_territory'] }}">
+                        <td>{{ row['state_or_union_territory'] }}</td>
+
+                        <td>
+                            {% if row['reported_cases_2023'] is not none %}
+                                {{ "{:,.0f}".format(row['reported_cases_2023']|float) }}
+                            {% else %}
+                                Data unavailable
+                            {% endif %}
+                        </td>
+
+                        <td>
+                            {% if row['reported_cases_2024'] is not none %}
+                                {{ "{:,.0f}".format(row['reported_cases_2024']|float) }}
+                            {% else %}
+                                Data unavailable
+                            {% endif %}
+                        </td>
+
+                        <td>
+                            {% if row['reported_deaths_2023'] is not none %}
+                                {{ "{:,.0f}".format(row['reported_deaths_2023']|float) }}
+                            {% else %}
+                                Data unavailable
+                            {% endif %}
+                        </td>
+
+                        <td>
+                            {% if row['reported_deaths_2024'] is not none %}
+                                {{ "{:,.0f}".format(row['reported_deaths_2024']|float) }}
+                            {% else %}
+                                Data unavailable
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <p id="noResults" hidden>
+            No matching state or Union Territory found.
+        </p>
+
+        <p class="data-note">
+            <strong>Data limitation:</strong>
+            These are historical reported figures, not live alerts or
+            validated predictions. A reported zero does not necessarily
+            mean no snakebites occurred. State boundaries and statistics
+            depend on the coverage of the supplied files.
+        </p>
+
+    </section>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<script>
+    // --------------------------------------------------
+    // 1. INITIALIZE MAP
+    // --------------------------------------------------
+
+    const map = L.map("map").setView([22.5, 79], 4.5);
+
+    L.tileLayer(
+        "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+        {
+            attribution: "&copy; OpenStreetMap contributors",
+            maxZoom: 18
+        }
+    ).addTo(map);
+
+
+    // --------------------------------------------------
+    // 2. LOAD SNAKEBITE DATA
+    // --------------------------------------------------
+
+    const snakebiteData = {{ snakebite_data | tojson }};
+
+    function normalizeStateName(name) {
+        return String(name || "")
+            .trim()
+            .toLowerCase()
+            .replace(/&/g, "and")
+            .replace(/[.,]/g, "")
+            .replace(/_/g, " ")
+            .replace(/\s+/g, " ");
+    }
+
+    const aliases = {
+        "nct of delhi": "delhi",
+        "national capital territory of delhi": "delhi",
+        "orissa": "odisha",
+        "uttaranchal": "uttarakhand",
+        "pondicherry": "puducherry",
+        "jammu & kashmir": "jammu and kashmir",
+        "andaman and nicobar": "andaman and nicobar islands",
+        "dadra and nagar haveli": "dadra and nagar haveli and daman and diu",
+        "daman and diu": "dadra and nagar haveli and daman and diu"
+    };
+
+    function canonicalName(name) {
+        const key = normalizeStateName(name);
+        return aliases[key] || key;
+    }
+
+    const numberFormat = new Intl.NumberFormat("en-IN");
+
+    function formatValue(value) {
+        if (
+            value === null ||
+            value === undefined ||
+            value === "" ||
+            !Number.isFinite(Number(value))
+        ) {
+            return "Data unavailable";
+        }
+
+        return numberFormat.format(Number(value));
+    }
+
+    const dataByState = new Map();
+
+    snakebiteData.forEach(row => {
+        const name = row.state_or_union_territory;
+        const key = canonicalName(name);
+
+        if (key) {
+            dataByState.set(key, {
+                name: String(name).trim(),
+                key: key,
+                row: row
+            });
+        }
+    });
+
+
+    // --------------------------------------------------
+    // 3. COLOUR STATES USING REPORTED 2024 CASES
+    // --------------------------------------------------
+
+    function getCaseColour(value) {
+        if (
+            value === null ||
+            value === undefined ||
+            value === "" ||
+            !Number.isFinite(Number(value))
+        ) {
+            return "#B8B8B0";
+        }
+
+        const cases = Number(value);
+
+        if (cases < 1000) return "#D9E8C5";
+        if (cases < 3000) return "#A8C98A";
+        if (cases < 6000) return "#F0D77A";
+        if (cases < 10000) return "#E9A15B";
+
+        return "#C95C4B";
+    }
+
+    function getFeatureStateName(properties) {
+        if (!properties) return "";
+
+        // Common property names used by state boundary GeoJSON files.
+        const candidates = [
+            properties.ST_NM,
+            properties.st_nm,
+            properties.STATE,
+            properties.State,
+            properties.state,
+            properties.state_name,
+            properties.NAME_1,
+            properties.name,
+            properties.NAME,
+            properties.STATE_NAME,
+            properties.shapeName
+        ];
+
+        return candidates.find(value =>
+            typeof value === "string" && value.trim() !== ""
+        ) || "";
+    }
+
+    function styleState(feature) {
+        const geoName = getFeatureStateName(feature.properties);
+        const record = dataByState.get(canonicalName(geoName));
+
+        const cases2024 = record
+            ? record.row.reported_cases_2024
+            : null;
+
+        return {
+            fillColor: getCaseColour(cases2024),
+            weight: 1,
+            opacity: 1,
+            color: "#526052",
+            fillOpacity: 0.78
+        };
+    }
+
+
+    // --------------------------------------------------
+    // 4. DISPLAY SELECTED STATE STATISTICS
+    // --------------------------------------------------
+
+    let selectedStateKey = "";
+
+    function showState(record) {
+        if (!record) return;
+
+        const row = record.row;
+
+        selectedStateKey = record.key;
+
+        document.getElementById("selectedStateName").textContent =
+            "Selected State: " + record.name;
+
+        document.getElementById("cases2023").textContent =
+            formatValue(row.reported_cases_2023);
+
+        document.getElementById("cases2024").textContent =
+            formatValue(row.reported_cases_2024);
+
+        document.getElementById("deaths2023").textContent =
+            formatValue(row.reported_deaths_2023);
+
+        document.getElementById("deaths2024").textContent =
+            formatValue(row.reported_deaths_2024);
+
+        document.getElementById("selectionMessage").textContent =
+            "Reported historical statistics for " + record.name + ".";
+
+        document.querySelectorAll("#stateTableBody tr").forEach(tr => {
+            tr.classList.toggle(
+                "selected-row",
+                canonicalName(tr.dataset.state) === record.key
+            );
+        });
+    }
+
+
+    // --------------------------------------------------
+    // 5. LOAD GEOJSON STATE BOUNDARIES
+    // --------------------------------------------------
+
+    let boundaryLayer = null;
+    let marker = null;
+    let stateRecords = [];
+
+    function featureClick(feature, layer) {
+        const geoName = getFeatureStateName(feature.properties);
+        const record = dataByState.get(canonicalName(geoName));
+
+        if (record) {
+            showState(record);
+
+            if (layer.getBounds && layer.getBounds().isValid()) {
+                const centre = layer.getBounds().getCenter();
+
+                if (marker) {
+                    marker.setLatLng(centre);
+                }
+            }
+        } else {
+            document.getElementById("selectionMessage").textContent =
+                "No matching statistics were found for " +
+                (geoName || "this region") +
+                " in the dataset.";
+        }
+    }
+
+    fetch("{{ url_for('static', filename='india_state.geojson') }}")
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(
+                    "GeoJSON file could not be loaded. HTTP " +
+                    response.status
+                );
+            }
+
+            return response.json();
+        })
+        .then(geojson => {
+            if (
+                !geojson ||
+                !Array.isArray(geojson.features)
+            ) {
+                throw new Error(
+                    "The boundary file is not a valid GeoJSON FeatureCollection."
+                );
+            }
+
+            boundaryLayer = L.geoJSON(geojson, {
+                style: styleState,
+
+                onEachFeature: function(feature, layer) {
+                    const geoName = getFeatureStateName(feature.properties);
+                    const record = dataByState.get(canonicalName(geoName));
+
+                    const displayName = record
+                        ? record.name
+                        : (geoName || "Unknown region");
+
+                    const cases = record
+                        ? formatValue(record.row.reported_cases_2024)
+                        : "Data unavailable";
+
+                    layer.bindTooltip(
+                        "<strong>" + displayName + "</strong><br>" +
+                        "Reported cases (2024): " + cases
+                    );
+
+                    layer.on({
+                        click: function() {
+                            featureClick(feature, layer);
+                        },
+
+                        mouseover: function() {
+                            layer.setStyle({
+                                weight: 2,
+                                color: "#102318",
+                                fillOpacity: 0.95
+                            });
+
+                            if (!L.Browser.ie && !L.Browser.opera &&
+                                !L.Browser.edge) {
+                                layer.bringToFront();
+                            }
+                        },
+
+                        mouseout: function() {
+                            boundaryLayer.resetStyle(layer);
+                        }
+                    });
+                }
+            }).addTo(map);
+
+            const bounds = boundaryLayer.getBounds();
+
+            if (bounds.isValid()) {
+                map.fitBounds(bounds, {
+                    padding: [15, 15]
+                });
+            }
+
+            // Build state records for the draggable marker.
+            stateRecords = [];
+
+            dataByState.forEach(record => {
+                const layer = boundaryLayer.getLayers().find(item => {
+                    const feature = item.feature;
+                    return canonicalName(
+                        getFeatureStateName(feature.properties)
+                    ) === record.key;
+                });
+
+                if (layer && layer.getBounds && layer.getBounds().isValid()) {
+                    stateRecords.push({
+                        name: record.name,
+                        key: record.key,
+                        coordinates: [
+                            layer.getBounds().getCenter().lat,
+                            layer.getBounds().getCenter().lng
+                        ],
+                        row: record.row
+                    });
+                }
+            });
+
+            // Keep a single draggable marker.
+            const initialRecord =
+                stateRecords.find(item => item.key === "tamil nadu") ||
+                stateRecords[0];
+
+            if (initialRecord) {
+                marker = L.marker(initialRecord.coordinates, {
+                    draggable: true,
+                    title: "Drag to select a state",
+                    autoPan: true,
+                    zIndexOffset: 1000
+                }).addTo(map);
+
+                marker.bindTooltip("Drag me to explore states");
+
+                showState(initialRecord);
+
+                function findNearestState(position) {
+                    let nearest = null;
+                    let shortestDistance = Infinity;
+
+                    stateRecords.forEach(record => {
+                        const statePosition = L.latLng(
+                            record.coordinates[0],
+                            record.coordinates[1]
+                        );
+
+                        const distance = map.distance(
+                            position,
+                            statePosition
+                        );
+
+                        if (distance < shortestDistance) {
+                            shortestDistance = distance;
+                            nearest = record;
+                        }
+                    });
+
+                    return nearest;
+                }
+
+                marker.on("dragend", function() {
+                    const nearest = findNearestState(marker.getLatLng());
+
+                    if (nearest) {
+                        showState(nearest);
+                    }
+                });
+            }
+
+            const matchedCount = boundaryLayer.getLayers().filter(layer => {
+                return dataByState.has(
+                    canonicalName(getFeatureStateName(layer.feature.properties))
+                );
+            }).length;
+
+            document.getElementById("mapStatus").textContent =
+                "State boundaries loaded. " + matchedCount +
+                " mapped regions matched your dataset. Click a coloured region to view its statistics.";
+
+            // Report any missing matches in the browser console.
+            boundaryLayer.getLayers().forEach(layer => {
+                const name = getFeatureStateName(layer.feature.properties);
+
+                if (!dataByState.has(canonicalName(name))) {
+                    console.warn(
+                        "No matching snakebite data for GeoJSON region:",
+                        name,
+                        layer.feature.properties
+                    );
+                }
+            });
+
+            // Refresh colours using the selected data.
+            boundaryLayer.setStyle(styleState);
+        })
+        .catch(error => {
+            console.error("Map boundary loading error:", error);
+
+            document.getElementById("mapStatus").textContent =
+                "Could not load state boundaries. Check that " +
+                "static/india_state.geojson exists and contains valid GeoJSON.";
+        });
+
+
+    // --------------------------------------------------
+    // 6. SEARCH TABLE
+    // --------------------------------------------------
+
+    const searchInput = document.getElementById("stateSearch");
+    const tableRows = document.querySelectorAll("#stateTableBody tr");
+    const noResults = document.getElementById("noResults");
+
+    searchInput.addEventListener("input", function() {
+        const searchText = this.value.trim().toLowerCase();
+        let visibleRows = 0;
+
+        tableRows.forEach(row => {
+            const stateName = row.cells[0].textContent.toLowerCase();
+            const matches = stateName.includes(searchText);
+
+            row.hidden = !matches;
+
+            if (matches) visibleRows++;
+        });
+
+        noResults.hidden = visibleRows !== 0;
+    });
+</script>
+
+</body>
+</html>

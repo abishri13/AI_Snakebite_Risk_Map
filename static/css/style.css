@@ -1,0 +1,257 @@
+/* =================================
+   SNAKEGUARD - LOGIN PAGE STYLES
+   ================================= */
+
+:root {
+    --forest: #102318;
+    --cream: #F3EEDC;
+    --cream-dark: #E9E2C8;
+    --text-green: #26352A;
+    --terracotta: #A43D32;
+    --border: #C9BE9B;
+}
+
+/* Reset */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    min-height: 100vh;
+    background: var(--forest);
+    color: var(--cream);
+    font-family: Arial, Helvetica, sans-serif;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Header */
+
+header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 25px 8%;
+}
+
+.logo {
+    font-size: 22px;
+    font-weight: bold;
+    letter-spacing: 2px;
+}
+
+nav {
+    display: flex;
+    gap: 30px;
+}
+
+nav a {
+    color: var(--cream);
+    text-decoration: none;
+    font-size: 14px;
+    text-transform: uppercase;
+    transition: color 0.3s ease;
+}
+
+nav a:hover {
+    color: var(--border);
+}
+
+/* Main layout */
+
+main {
+    width: 100%;
+    max-width: 1250px;
+    margin: auto;
+    padding: 40px 8%;
+    display: grid;
+    grid-template-columns: 1fr 420px;
+    align-items: center;
+    gap: 70px;
+}
+
+/* Introduction */
+
+.intro .tagline {
+    color: var(--border);
+    font-size: 12px;
+    font-weight: bold;
+    letter-spacing: 3px;
+    margin-bottom: 22px;
+}
+
+.intro h1 {
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: clamp(38px, 4vw, 56px);
+    line-height: 1.15;
+    margin-bottom: 25px;
+}
+
+.intro > p:last-child {
+    max-width: 420px;
+    color: #D5DCCF;
+    font-size: 16px;
+    line-height: 1.8;
+}
+
+/* Login card */
+
+.login-card {
+    background: var(--cream);
+    color: var(--text-green);
+    padding: 42px 35px;
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.2);
+}
+
+.login-card h2 {
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 30px;
+    text-transform: capitalize;
+    margin-bottom: 10px;
+}
+
+.subtitle {
+    color: #687367;
+    font-size: 13px;
+    line-height: 1.6;
+    margin-bottom: 30px;
+}
+
+/* Form */
+
+form {
+    display: flex;
+    flex-direction: column;
+}
+
+form label {
+    font-size: 13px;
+    font-weight: bold;
+    margin-bottom: 9px;
+}
+
+form input {
+    width: 100%;
+    padding: 14px;
+    margin-bottom: 22px;
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    background: #FFFEF8;
+    color: var(--text-green);
+    font-size: 14px;
+    outline: none;
+    transition: border-color 0.3s ease;
+}
+
+form input:focus {
+    border-color: var(--forest);
+    box-shadow: 0 0 0 2px rgba(16, 35, 24, 0.08);
+}
+
+form input::placeholder {
+    color: #92958A;
+}
+
+/* Login button */
+
+form button {
+    width: 100%;
+    padding: 15px;
+    border: none;
+    border-radius: 3px;
+    background: var(--terracotta);
+    color: white;
+    font-size: 13px;
+    font-weight: bold;
+    letter-spacing: 1.5px;
+    cursor: pointer;
+    transition: background 0.3s ease, transform 0.2s ease;
+}
+
+form button:hover {
+    background: #832F27;
+    transform: translateY(-2px);
+}
+
+/* Signup link */
+
+.signup-text {
+    text-align: center;
+    font-size: 13px;
+    margin-top: 25px;
+    color: #687367;
+}
+
+.signup-text a {
+    color: var(--terracotta);
+    font-weight: bold;
+    text-decoration: none;
+}
+
+.signup-text a:hover {
+    text-decoration: underline;
+}
+
+/* Footer */
+
+footer {
+    padding: 28px 15px;
+    text-align: center;
+    color: var(--border);
+    font-size: 11px;
+    letter-spacing: 2px;
+}
+
+/* Mobile responsive design */
+
+@media (max-width: 850px) {
+    main {
+        grid-template-columns: 1fr;
+        gap: 40px;
+        max-width: 550px;
+        padding: 35px 25px;
+    }
+
+    .intro {
+        text-align: center;
+    }
+
+    .intro > p:last-child {
+        margin: auto;
+    }
+
+    .login-card {
+        padding: 35px 25px;
+    }
+
+    header {
+        padding: 22px 6%;
+    }
+
+    nav {
+        gap: 15px;
+    }
+}
+
+@media (max-width: 420px) {
+    .logo {
+        font-size: 17px;
+    }
+
+    nav {
+        gap: 12px;
+    }
+
+    nav a {
+        font-size: 11px;
+    }
+
+    .intro h1 {
+        font-size: 35px;
+    }
+}
